@@ -4,7 +4,7 @@ import fs from "fs";
 import "dotenv/config";
 
 export async function getSalesforceToken() {
-  const privateKey = fs.readFileSync("./server.key", "utf8");
+  const privateKey = process.env.SF_PRIVATE_KEY.replace(/\\n/g, "\n");
 
   const assertion = jwt.sign(
     {
