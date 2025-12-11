@@ -6,13 +6,14 @@ import {
   updateAccount,
   deleteAccount,
 } from "../controllers/accountController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", getAccounts);
-router.get("/:id", getAccount);
-router.post("/", createAccount);
-router.put("/:id", updateAccount);
-router.delete("/:id", deleteAccount);
+router.get("/", protect, getAccounts);
+router.get("/:id", protect, getAccount);
+router.post("/", protect, createAccount);
+router.patch("/:id", protect, updateAccount);
+router.delete("/:id", protect, deleteAccount);
 
 export default router;

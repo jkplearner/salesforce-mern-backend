@@ -10,8 +10,8 @@ const router = express.Router();
 
 router.use(protect);
 
-router.post("/", createNote);
-router.get("/:objectId", getNotes);
-router.delete("/:id", deleteNote);
+router.post("/", protect, createNote);
+router.get("/:objectId", protect, getNotes);
+router.delete("/:id", protect, deleteNote);
 
 export default router;

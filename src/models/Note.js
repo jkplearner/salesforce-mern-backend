@@ -2,9 +2,10 @@ import mongoose from "mongoose";
 
 const noteSchema = new mongoose.Schema(
     {
-        text: { type: String, required: true },
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-        objectId: { type: String, required: true }, // Can be Lead or Account SF ID
+        relatedSfId: { type: String, required: true }, // Links to Account/Lead
+        title: { type: String },
+        content: { type: String, required: true }
     },
     { timestamps: true }
 );

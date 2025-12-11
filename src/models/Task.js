@@ -2,19 +2,20 @@ import mongoose from "mongoose";
 
 const taskSchema = new mongoose.Schema(
     {
-        title: { type: String, required: true },
-        description: { type: String },
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+        subject: { type: String, required: true },
         dueDate: { type: Date },
         status: {
             type: String,
-            enum: ["pending", "in-progress", "completed"],
-            default: "pending",
+            enum: ["Not Started", "In Progress", "Completed", "Waiting on someone else", "Deferred"],
+            default: "Not Started"
         },
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-
-        // Optional Salesforce links
-        leadId: { type: String },
-        opportunityId: { type: String },
+        priority: {
+            type: String,
+            enum: ["High", "Normal", "Low"],
+            default: "Normal"
+        },
+        relatedSfId: { type: String } // Optional FK to SF object
     },
     { timestamps: true }
 );

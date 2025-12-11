@@ -6,13 +6,13 @@ import {
   updateOpportunity,
   deleteOpportunity,
 } from "../controllers/opportunityController.js";
-
+import { protect } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
-router.get("/", getOpportunities);
-router.get("/:id", getOpportunity);
-router.post("/", createOpportunity);
-router.put("/:id", updateOpportunity);
-router.delete("/:id", deleteOpportunity);
+router.get("/", protect, getOpportunities);
+router.get("/:id", protect, getOpportunity);
+router.post("/", protect, createOpportunity);
+router.patch("/:id", protect, updateOpportunity);
+router.delete("/:id", protect, deleteOpportunity);
 
 export default router;
