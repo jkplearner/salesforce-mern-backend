@@ -81,7 +81,28 @@ export const createLead = async (req, res) => {
 
     sendResponse(res, true, "Lead created successfully", { mongo: newLead, sfId: sfResult.id });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.response?.data || err.message });
+    const sfError = err.response?.data;
+
+    // 1. Surgical Fix: Handle Salesforce Duplicates
+    if (Array.isArray(sfError) && sfError.some(e => e.errorCode === "DUPLICATES_DETECTED")) {
+      return res.status(409).json({
+        success: false,
+        message: "Duplicate record detected. This Lead already exists in Salesforce."
+      });
+    }
+
+    // 2. Safety Net: Ensure 'message' is ALWAYS a string
+    let finalMessage = err.message;
+    if (Array.isArray(sfError) && sfError[0]?.message) {
+      finalMessage = `Salesforce Error: ${sfError[0].message}`;
+    } else if (sfError && typeof sfError === 'object') {
+      finalMessage = Object.keys(sfError).length > 0
+        ? JSON.stringify(sfError)
+        : "Unknown Salesforce Error";
+    }
+
+    console.error("🔥 CREATE LEAD ERROR:", finalMessage);
+    res.status(500).json({ success: false, message: finalMessage });
   }
 };
 
