@@ -23,7 +23,8 @@ export const getLeads = async (req, res) => {
     }
 
     // optimizing with IN query
-    const sfIds = userLeads.map((l) => `'${l.sfId}'`).join(",");
+    const MAX_IDS = 100;
+    const sfIds = userLeads.slice(0, MAX_IDS).map((l) => `'${l.sfId}'`).join(",");
     const sfQuery = `SELECT Id, Salutation, FirstName, LastName, Company, Title, Email, Phone, MobilePhone, LeadSource, Industry, Status, AnnualRevenue, NumberOfEmployees FROM Lead WHERE Id IN (${sfIds})`;
 
     const salesforceData = await querySalesforce(sfQuery);
@@ -73,11 +74,17 @@ export const createLead = async (req, res) => {
       throw new Error("Failed to create Lead in Salesforce");
     }
 
-    const newLead = await Lead.create({
-      userId: req.user.id,
-      sfId: sfResult.id,
-      label: `${sfData.LastName} (${sfData.Company})`
-    });
+    let newLead;
+    try {
+      newLead = await Lead.create({
+        userId: req.user.id,
+        sfId: sfResult.id,
+        label: `${sfData.LastName} (${sfData.Company})`
+      });
+    } catch (mongoErr) {
+      await deleteRecord("Lead", sfResult.id); // Rollback
+      throw mongoErr;
+    }
 
     sendResponse(res, true, "Lead created successfully", { mongo: newLead, sfId: sfResult.id });
   } catch (err) {

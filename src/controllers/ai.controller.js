@@ -12,11 +12,12 @@ export const askAi = async (req, res) => {
             return res.status(400).json({ answer: "Insufficient data" });
         }
 
-        // 1. Fetch User's Data (Parallel for speed)
+        // 1. Fetch User's Data (Safe Memory Cap)
+        const MAX_RECORDS = 100;
         const [userLeads, userAccounts, userOpps] = await Promise.all([
-            Lead.find({ userId: req.user.id }),
-            Account.find({ userId: req.user.id }),
-            Opportunity.find({ userId: req.user.id }),
+            Lead.find({ userId: req.user.id }).select("sfId").limit(MAX_RECORDS).lean(),
+            Account.find({ userId: req.user.id }).select("sfId").limit(MAX_RECORDS).lean(),
+            Opportunity.find({ userId: req.user.id }).select("sfId").limit(MAX_RECORDS).lean(),
         ]);
 
         // 2. Fetch Details from Salesforce

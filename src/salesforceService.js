@@ -13,6 +13,7 @@ export async function querySalesforce(query) {
 
     const response = await axios.get(url, {
       headers: { Authorization: `Bearer ${token}` },
+      timeout: 10000,
     });
 
     return response.data.records;
@@ -36,6 +37,7 @@ export async function createRecord(objectName, data) {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
+      timeout: 10000,
     });
 
     return response.data;
@@ -59,6 +61,7 @@ export async function updateRecord(objectName, id, data) {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
+      timeout: 10000,
     });
 
     return response.data;
@@ -81,6 +84,7 @@ export async function deleteRecord(objectName, id) {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      timeout: 10000,
     });
 
     return { success: true };

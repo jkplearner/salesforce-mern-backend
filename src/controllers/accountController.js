@@ -21,7 +21,8 @@ export const getAccounts = async (req, res) => {
       return sendResponse(res, true, "No accounts found", []);
     }
 
-    const sfIds = userAccounts.map(a => `'${a.sfId}'`).join(",");
+    const MAX_IDS = 100;
+    const sfIds = userAccounts.slice(0, MAX_IDS).map(a => `'${a.sfId}'`).join(",");
     const accounts = await querySalesforce(
       `SELECT Id, Name, Phone, Industry, Type, Rating, Website FROM Account WHERE Id IN (${sfIds})`
     );
@@ -71,12 +72,19 @@ export const createAccount = async (req, res) => {
     const sfResult = await createRecord("Account", sfData);
 
     // 4. Create in Mongo (Metadata)
-    const newAccount = await Account.create({
-      userId: req.user.id,
-      sfId: sfResult.id,
-      label: sfData.Name,
-      cachedFields: { type: sfData.Type || "" }
-    });
+    // 4. Create in Mongo (Metadata)
+    let newAccount;
+    try {
+      newAccount = await Account.create({
+        userId: req.user.id,
+        sfId: sfResult.id,
+        label: sfData.Name,
+        cachedFields: { type: sfData.Type || "" }
+      });
+    } catch (mongoErr) {
+      await deleteRecord("Account", sfResult.id); // Rollback
+      throw mongoErr;
+    }
 
     sendResponse(res, true, "Account created successfully", { mongo: newAccount, sfId: sfResult.id });
   } catch (err) {

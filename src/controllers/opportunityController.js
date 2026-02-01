@@ -21,7 +21,8 @@ export const getOpportunities = async (req, res) => {
       return sendResponse(res, true, "No opportunities found for this user", []);
     }
 
-    const sfIds = userOpps.map(o => `'${o.sfId}'`).join(",");
+    const MAX_IDS = 100;
+    const sfIds = userOpps.slice(0, MAX_IDS).map(o => `'${o.sfId}'`).join(",");
     const opportunities = await querySalesforce(
       `SELECT Id, Name, StageName, Amount, CloseDate FROM Opportunity WHERE Id IN (${sfIds})`
     );
@@ -66,11 +67,18 @@ export const createOpportunity = async (req, res) => {
     const sfResult = await createRecord("Opportunity", sfData);
 
     // Create in MongoDB
-    const newOpp = await Opportunity.create({
-      userId: req.user.id,
-      sfId: sfResult.id,
-      label: sfData.Name
-    });
+    // Create in MongoDB
+    let newOpp;
+    try {
+      newOpp = await Opportunity.create({
+        userId: req.user.id,
+        sfId: sfResult.id,
+        label: sfData.Name
+      });
+    } catch (mongoErr) {
+      await deleteRecord("Opportunity", sfResult.id); // Rollback
+      throw mongoErr;
+    }
 
     sendResponse(res, true, "Opportunity created successfully", { mongo: newOpp, sfId: sfResult.id });
   } catch (err) {
