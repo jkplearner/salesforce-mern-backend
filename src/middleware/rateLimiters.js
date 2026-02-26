@@ -1,11 +1,11 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 
 // ==========================================
 // KEY GENERATOR (Safe for all)
 // ==========================================
 // Uses User ID if authenticated, otherwise IP address.
 const keyGenerator = (req) => {
-    return req.user?.id || req.ip;
+    return req.user?.id || ipKeyGenerator(req);
 };
 
 // ==========================================
@@ -19,7 +19,7 @@ export const globalLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: "Too many requests from this IP, please try again after 15 minutes" },
-    keyGenerator: (req) => req.ip, // Global flood check should be IP based always
+    keyGenerator: (req) => ipKeyGenerator(req), // Global flood check should be IP based always
 });
 
 // ==========================================
@@ -34,7 +34,7 @@ export const authLimiter = rateLimit({
     legacyHeaders: false,
     skipSuccessfulRequests: true, // Crucial: Only restrict failures
     message: { error: "Too many failed login attempts, please try again in an hour" },
-    keyGenerator: (req) => req.ip, // Auth is usually pre-login, so IP based
+    keyGenerator: (req) => ipKeyGenerator(req), // Auth is usually pre-login, so IP based
 });
 
 // ==========================================
